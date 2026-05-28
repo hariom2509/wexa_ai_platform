@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: wexa_postgres
+    environment:
+      POSTGRES_USER: wexa_user
+      POSTGRES_PASSWORD: wexa_password
+      POSTGRES_DB: wexa_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wexa_user -d wexa_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: wexa_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  api:
+    build: 
+      context: ./backend
+    container_name: wexa_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://wexa_user:wexa_password@db:5432/wexa_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=my_super_secret_jwt_key_that_should_be_changed_in_prod
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build: 
+      context: ./backend
+    container_name: wexa_worker
+    command: celery -A app.tasks.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://wexa_user:wexa_password@db:5432/wexa_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=my_super_secret_jwt_key_that_should_be_changed_in_prod
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: wexa_frontend
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:
