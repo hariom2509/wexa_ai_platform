@@ -1,0 +1,13 @@
+
+fastapi
+uvicorn
+sqlalchemy
+asyncpg
+pydantic
+python-jose
+passlib[bcrypt]
+celery
+redis
+websockets
+python-multipart
+pydantic-settings
