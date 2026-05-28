@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -39,8 +40,8 @@ class ApiKeyOut(BaseModel):
     name: str
     prefix: str
     raw_key: str | None = None
-    created_at: str | None = None
-    last_used_at: str | None = None
+    created_at: datetime | None = None
+    last_used_at: datetime | None = None
     
     class Config:
         from_attributes = True
