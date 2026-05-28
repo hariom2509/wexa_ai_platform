@@ -42,7 +42,7 @@ export default function Settings() {
     }
   }
 
-  const handleRevokeKey = async (id: int) => {
+  const handleRevokeKey = async (id: number) => {
     if (!confirm('Are you sure you want to revoke this API key?')) return
     try {
       await api.delete(`/keys/${id}`)
