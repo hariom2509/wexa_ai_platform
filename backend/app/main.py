@@ -32,10 +32,18 @@ async def startup():
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
         
-        # Simple auto-migration for newly added dashboard columns
+    # Simple auto-migration for newly added dashboard columns
+    # Run outside the transaction block to avoid aborting on column-exists errors
+    async with engine.connect() as conn:
         try:
             await conn.execute(text("ALTER TABLE dashboards ADD COLUMN is_public BOOLEAN DEFAULT FALSE"))
+            await conn.commit()
+        except Exception:
+            pass
+            
+        try:
             await conn.execute(text("ALTER TABLE dashboards ADD COLUMN public_token VARCHAR UNIQUE"))
+            await conn.commit()
         except Exception:
             pass
 
