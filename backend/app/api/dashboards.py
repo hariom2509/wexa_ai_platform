@@ -25,6 +25,13 @@ async def list_dashboards(
 ):
     return await dashboard_service.get_dashboards(db, current_user.organization_id)
 
+@router.get("/public/{token}", response_model=DashboardOut)
+async def get_public_dashboard(
+    token: str,
+    db: AsyncSession = Depends(get_db)
+):
+    return await dashboard_service.get_public_dashboard(db, token)
+
 @router.get("/{dashboard_id}", response_model=DashboardOut)
 async def get_dashboard(
     dashboard_id: int,

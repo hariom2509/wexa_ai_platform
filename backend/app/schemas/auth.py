@@ -22,3 +22,25 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class InviteCreate(BaseModel):
+    email: EmailStr
+    role: str = "viewer"
+
+class InviteAccept(BaseModel):
+    token: str
+    password: str
+
+class ApiKeyCreate(BaseModel):
+    name: str
+
+class ApiKeyOut(BaseModel):
+    id: int
+    name: str
+    prefix: str
+    raw_key: str | None = None
+    created_at: str | None = None
+    last_used_at: str | None = None
+    
+    class Config:
+        from_attributes = True

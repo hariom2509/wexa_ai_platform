@@ -14,6 +14,9 @@ export default function Dashboard() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [refreshInterval, setRefreshInterval] = useState(0) // 0 means off
+  const [shareLink, setShareLink] = useState('')
+  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -50,7 +53,16 @@ export default function Dashboard() {
     }
 
     fetchDashboardData()
-  }, [])
+
+    let intervalId: any
+    if (refreshInterval > 0) {
+      intervalId = setInterval(fetchDashboardData, refreshInterval)
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [refreshInterval])
 
   const { lastMessage } = useWebSocket()
 
@@ -79,13 +91,56 @@ export default function Dashboard() {
     }
   }, [lastMessage])
 
+  const handleShare = async () => {
+    setSharing(true)
+    try {
+      // Create a public dashboard on the backend
+      const res = await api.post('/dashboards/', {
+        name: 'My Dashboard',
+        widgets: [], // In a real app we'd pass the current widgets
+        is_public: true
+      })
+      if (res.public_token) {
+        const link = `${window.location.origin}/public/${res.public_token}`
+        setShareLink(link)
+        navigator.clipboard.writeText(link)
+        alert('Public link copied to clipboard!')
+      }
+    } catch (err) {
+      alert('Failed to share dashboard')
+    } finally {
+      setSharing(false)
+    }
+  }
+
   if (loading) return <div className="p-8 text-center">Loading dashboard...</div>
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
-        <h1 className="mb-8 text-4xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-4xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <div className="flex items-center space-x-4">
+            <select
+              value={refreshInterval}
+              onChange={(e) => setRefreshInterval(Number(e.target.value))}
+              className="rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            >
+              <option value={0}>Auto-refresh: Off</option>
+              <option value={30000}>30s</option>
+              <option value={60000}>1m</option>
+              <option value={300000}>5m</option>
+            </select>
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400"
+            >
+              {sharing ? 'Sharing...' : 'Share'}
+            </button>
+          </div>
+        </div>
         
         {/* KPI Cards */}
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">

@@ -30,10 +30,40 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${url}`, {
+  let response = await fetch(`${API_URL}${url}`, {
     ...options,
     headers,
+    credentials: "include"
   });
+
+  if (response.status === 401 && !url.includes('/auth/refresh') && !url.includes('/auth/login')) {
+    // Try to refresh token
+    try {
+      const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include"
+      });
+      
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        setAuthToken(refreshData.access_token);
+        
+        // Retry original request
+        headers["Authorization"] = `Bearer ${refreshData.access_token}`;
+        response = await fetch(`${API_URL}${url}`, {
+          ...options,
+          headers,
+          credentials: "include"
+        });
+      } else {
+        clearAuthToken();
+        if (typeof window !== 'undefined') window.location.href = '/login';
+      }
+    } catch (e) {
+      clearAuthToken();
+      if (typeof window !== 'undefined') window.location.href = '/login';
+    }
+  }
 
   if (!response.ok) {
     let errorMessage = "API request failed";
