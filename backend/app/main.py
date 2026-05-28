@@ -31,6 +31,13 @@ async def startup():
         # Create pgvector extension if not exists
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
+        
+        # Simple auto-migration for newly added dashboard columns
+        try:
+            await conn.execute(text("ALTER TABLE dashboards ADD COLUMN is_public BOOLEAN DEFAULT FALSE"))
+            await conn.execute(text("ALTER TABLE dashboards ADD COLUMN public_token VARCHAR UNIQUE"))
+        except Exception:
+            pass
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(events.router, prefix="/api/events", tags=["Events"])
