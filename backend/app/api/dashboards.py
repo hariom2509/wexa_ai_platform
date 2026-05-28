@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -16,7 +16,11 @@ async def create_dashboard(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return await dashboard_service.create_dashboard(db, current_user.organization_id, dashboard_in)
+    try:
+        return await dashboard_service.create_dashboard(db, current_user.organization_id, dashboard_in)
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=400, detail=f"Dashboard creation failed: {str(e)}\n{traceback.format_exc()}")
 
 @router.get("/", response_model=List[DashboardOut])
 async def list_dashboards(
