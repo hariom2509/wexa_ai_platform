@@ -36,6 +36,12 @@ async def startup():
     # Run outside the transaction block to avoid aborting on column-exists errors
     async with engine.connect() as conn:
         try:
+            await conn.execute(text("ALTER TABLE dashboards ADD COLUMN description VARCHAR"))
+            await conn.commit()
+        except Exception:
+            pass
+            
+        try:
             await conn.execute(text("ALTER TABLE dashboards ADD COLUMN is_public BOOLEAN DEFAULT FALSE"))
             await conn.commit()
         except Exception:

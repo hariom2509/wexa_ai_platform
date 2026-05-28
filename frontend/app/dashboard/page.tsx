@@ -106,8 +106,8 @@ export default function Dashboard() {
         navigator.clipboard.writeText(link)
         alert('Public link copied to clipboard!')
       }
-    } catch (err) {
-      alert('Failed to share dashboard')
+    } catch (err: any) {
+      alert(err.message || 'Failed to share dashboard')
     } finally {
       setSharing(false)
     }
