@@ -40,9 +40,8 @@ async def upload_csv(
             continue
             
         event_data = EventCreate(
-            event_name=row.pop('event_name'),
-            user_id=row.pop('user_id', 'unknown'),
-            properties=row # The rest goes into properties
+            event_type=row.pop('event_name'),
+            payload=row
         )
         await event_service.create_event(db, org_id, event_data)
         events_created += 1
