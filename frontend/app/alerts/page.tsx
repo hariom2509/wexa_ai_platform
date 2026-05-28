@@ -24,6 +24,7 @@ export default function Alerts() {
   const [error, setError] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [nameEdited, setNameEdited] = useState(false)
 
   const [form, setForm] = useState({
     name: '',
@@ -34,6 +35,12 @@ export default function Alerts() {
     notification_channel: 'in-app',
     webhook_url: '',
   })
+
+  // Auto-generate a human-readable alert name from the rule fields
+  const autoName = form.metric
+    ? `${form.metric} ${form.condition} ${form.threshold} in ${form.window_minutes}m`
+    : ''
+  const displayName = nameEdited ? form.name : autoName
 
   const fetchAlerts = async () => {
     try {
@@ -67,11 +74,13 @@ export default function Alerts() {
     try {
       await api.post('/alerts/', {
         ...form,
+        name: displayName || 'Unnamed Alert',
         threshold: Number(form.threshold),
         window_minutes: Number(form.window_minutes),
         webhook_url: form.webhook_url || undefined,
       })
       setShowCreateForm(false)
+      setNameEdited(false)
       setForm({ name: '', metric: '', condition: '>', threshold: 10, window_minutes: 10, notification_channel: 'in-app', webhook_url: '' })
       await fetchAlerts()
     } catch (err: any) {
@@ -118,10 +127,24 @@ export default function Alerts() {
         {showCreateForm && (
           <form onSubmit={handleCreate} className="mb-8 bg-white rounded-xl shadow-sm p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <h2 className="col-span-2 text-lg font-bold text-gray-900">New Alert Rule</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Alert Name</label>
-              <input required value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                className="w-full border rounded-md px-3 py-2" placeholder="High Error Rate" />
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Alert Name
+                {!nameEdited && autoName && (
+                  <span className="ml-2 text-xs text-blue-500 font-normal">auto-generated</span>
+                )}
+              </label>
+              <input
+                value={nameEdited ? form.name : autoName}
+                onChange={e => { setNameEdited(true); setForm(f => ({...f, name: e.target.value})) }}
+                onFocus={() => { if (!nameEdited && autoName) { setNameEdited(true); setForm(f => ({...f, name: autoName})) } }}
+                className="w-full border rounded-md px-3 py-2"
+                placeholder={autoName || 'Will be auto-generated from rule fields...'}
+              />
+              {nameEdited && (
+                <button type="button" onClick={() => { setNameEdited(false); setForm(f => ({...f, name: ''})) }}
+                  className="text-xs text-gray-400 hover:text-gray-600 mt-1">↩ Reset to auto-generated</button>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Metric (event_type)</label>
