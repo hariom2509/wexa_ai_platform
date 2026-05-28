@@ -9,7 +9,7 @@ export default function Settings() {
   const [error, setError] = useState('')
   const [newKeyName, setNewKeyName] = useState('')
   const [createdKey, setCreatedKey] = useState('')
-  
+
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('viewer')
   const [inviteLoading, setInviteLoading] = useState(false)
@@ -72,12 +72,12 @@ export default function Settings() {
         <h1 className="mb-8 text-4xl font-bold text-gray-900">Organization Settings</h1>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          
+
           {/* API Keys */}
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-xl font-bold text-gray-900">API Keys</h2>
             <p className="mb-4 text-sm text-gray-500">Generate API keys to ingest data from external sources.</p>
-            
+
             {createdKey && (
               <div className="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
                 <p className="text-sm font-medium text-green-800 mb-2">Key generated successfully! Copy it now, you won't be able to see it again:</p>
@@ -134,7 +134,7 @@ export default function Settings() {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-xl font-bold text-gray-900">Invite Team Members</h2>
             <p className="mb-4 text-sm text-gray-500">Invite colleagues to your organization.</p>
-            
+
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email Address</label>
