@@ -14,7 +14,23 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     return await auth_service.register(db, user_in)
 
 @router.post("/login", response_model=Token)
-async def login(user_in: UserLogin, response: Response, db: AsyncSession = Depends(get_db)):
+async def login(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/x-www-form-urlencoded" in content_type:
+        form_data = await request.form()
+        email = form_data.get("username")
+        password = form_data.get("password")
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Username and password required")
+        user_in = UserLogin(email=email, password=password)
+    else:
+        try:
+            body = await request.json()
+            user_in = UserLogin(**body)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
     access_token, refresh_token = await auth_service.authenticate(db, user_in)
     
     # Set HTTP-only cookie for refresh token
