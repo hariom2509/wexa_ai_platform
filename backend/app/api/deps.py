@@ -11,7 +11,7 @@ from app.models.user import User
 from app.models.api_key import ApiKey
 import hashlib
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/swagger-login", auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 async def get_current_user(
